@@ -53,7 +53,7 @@ bool loadShaders(GLuint &program)
 	{
 		loadSuccess = false;
 		glGetShaderInfoLog(vertexShader, bufferSize, nullptr, infoLog);
-		std::cout << "ERROR::LOADSHADERS::COULD_NOT_COMPILE_VERTEX_SHADER" << std::endl;
+		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED" << std::endl;
 		std::cout << infoLog << std::endl;
 	}
 
@@ -72,7 +72,7 @@ bool loadShaders(GLuint &program)
 	else
 	{
 		loadSuccess = false;
-		std::cout << "ERROR::LOADSHADERS::COULD_NOT_OPEN_FRAGMENT_FILE" << std::endl;
+		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED" << std::endl;
 	}
 
 	in_file.close();
@@ -143,6 +143,14 @@ int main()
 		std::cout << "ERROR::MAIN.CPP::GLEW_INIT_FAILED" << std::endl;
 		glfwTerminate();
 	}
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	GLuint coreProgram;
 	if (!loadShaders(coreProgram))
