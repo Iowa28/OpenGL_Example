@@ -2,16 +2,18 @@
 
 Vertex vertices[] =
 {
-	glm::vec3(0.f, .5f, 0.f), glm::vec3(1.f, 0.f, 0.f), glm::vec2(0.f, 1.f),
-	glm::vec3(-.5f, -.5f, 0.f), glm::vec3(0.f, 1.f, 0.f), glm::vec2(0.f, 0.f),
-	glm::vec3(0.5f, -.5f, 0.f), glm::vec3(0.f, 0.f, 1.f), glm::vec2(1.f, 0.f)
+	{vec3(-.5f, .5f, 0.f), vec3(1.f, 0.f, 0.f), vec2(0.f, 1.f)},
+	{vec3(-.5f, -.5f, 0.f), vec3(0.f, 1.f, 0.f), vec2(0.f, 0.f)},
+	{vec3(0.5f, -.5f, 0.f), vec3(0.f, 0.f, 1.f), vec2(1.f, 0.f)},
+	{vec3(.5f, .5f, 0.f), vec3(1.f, 1.f, 0.f), vec2(1.f, 1.f)}
 };
 
 signed nrOfVertices = sizeof(vertices) / sizeof(Vertex);
 
 GLuint indices[] =
 {
-	0, 1, 2
+	0, 1, 2,
+	0, 2, 3
 };
 
 signed nrOfIndices = sizeof(indices) / sizeof(GLuint);
@@ -174,10 +176,10 @@ int main()
 	
 #pragma endregion RenderSettings
 
+#pragma region ConfigureShaders
 	GLuint coreProgram;
 	if (!loadShaders(coreProgram))
 	{
-		// glfwDestroyWindow(window);
 		glfwTerminate();
 	}
 
@@ -195,7 +197,6 @@ int main()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-	// const GLuint attribLoc = glGetAttribLocation(coreProgram, "vertex_position");
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*) offsetof(Vertex, position));
 	glEnableVertexAttribArray(0);
 
@@ -206,6 +207,34 @@ int main()
 	glEnableVertexAttribArray(2);
 
 	glBindVertexArray(0);
+#pragma endregion ConfigureShaders
+
+	int image_width = 0;
+	int image_height = 0;
+	unsigned char* image = SOIL_load_image("Textures/spongebob.png", &image_width, &image_height, nullptr, SOIL_LOAD_RGBA);
+
+	GLuint texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	if (image)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "ERROR::TEXTURE::LOADING_FAILED" << std::endl;	
+	}
+
+	glActiveTexture(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	SOIL_free_image_data(image);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -215,12 +244,23 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		glUseProgram(coreProgram);
+
+		glUniform1i(glGetUniformLocation(coreProgram, "myTexture"), 0);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		
 		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, nrOfVertices);
-		// glDrawElements(GL_TRIANGLES, nrOfIndices, GL_UNSIGNED_INT, 0);
+		// glDrawArrays(GL_TRIANGLES, 0, nrOfVertices);
+		glDrawElements(GL_TRIANGLES, nrOfIndices, GL_UNSIGNED_INT, 0);
 
 		glfwPollEvents();
 		glfwSwapBuffers(window);
+
+		glBindVertexArray(0);
+		glUseProgram(0);
+		glActiveTexture(0);
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
 	glfwDestroyWindow(window);
