@@ -132,6 +132,35 @@ bool loadShaders(GLuint &program)
 	return loadSuccess;
 }
 
+void loadTexture(GLuint& texture, const char* path)
+{
+	int image_width = 0;
+	int image_height = 0;
+	unsigned char* image = SOIL_load_image(path, &image_width, &image_height, nullptr, SOIL_LOAD_RGBA);
+	
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+	if (image)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "ERROR::TEXTURE::LOADING_FAILED" << std::endl;	
+	}
+
+	
+	glBindTexture(GL_TEXTURE_2D, 0);
+	SOIL_free_image_data(image);
+}
+
 int main()
 {
 #pragma region InitOpenGL
@@ -209,32 +238,9 @@ int main()
 	glBindVertexArray(0);
 #pragma endregion ConfigureShaders
 
-	int image_width = 0;
-	int image_height = 0;
-	unsigned char* image = SOIL_load_image("Textures/spongebob.png", &image_width, &image_height, nullptr, SOIL_LOAD_RGBA);
-
-	GLuint texture;
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	if (image)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cout << "ERROR::TEXTURE::LOADING_FAILED" << std::endl;	
-	}
-
-	glActiveTexture(0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	SOIL_free_image_data(image);
+	GLuint texture1, texture2;
+	loadTexture(texture1, "Textures/spongebob.png");
+	loadTexture(texture2, "Textures/wall.jpg");
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -245,10 +251,11 @@ int main()
 
 		glUseProgram(coreProgram);
 
-		glUniform1i(glGetUniformLocation(coreProgram, "myTexture"), 0);
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture);
+		glUniform1i(glGetUniformLocation(coreProgram, "texture1"), 0);
+		glUniform1i(glGetUniformLocation(coreProgram, "texture2"), 1);
+		
+		glBindTextureUnit(0, texture1);
+		glBindTextureUnit(1, texture2);
 		
 		glBindVertexArray(VAO);
 		// glDrawArrays(GL_TRIANGLES, 0, nrOfVertices);
@@ -259,8 +266,6 @@ int main()
 
 		glBindVertexArray(0);
 		glUseProgram(0);
-		glActiveTexture(0);
-		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
 	glfwDestroyWindow(window);
