@@ -18,6 +18,8 @@ GLuint indices[] =
 
 signed nrOfIndices = sizeof(indices) / sizeof(GLuint);
 
+constexpr uint16_t bufferSize = 512;
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
@@ -31,10 +33,8 @@ void processInput(GLFWwindow *window)
 	}
 }
 
-bool loadShaders(GLuint &program)
+bool loadShader(GLuint& shader, const char* filename)
 {
-	bool loadSuccess = true;
-	constexpr uint16_t bufferSize = 512;
 	char infoLog[bufferSize];
 	GLint success;
 
@@ -43,7 +43,7 @@ bool loadShaders(GLuint &program)
 
 	std::ifstream in_file;
 
-	in_file.open("vertex_core.glsl");
+	in_file.open(filename);
 
 	if (in_file.is_open())
 	{
@@ -54,82 +54,64 @@ bool loadShaders(GLuint &program)
 	}
 	else
 	{
-		loadSuccess = false;
 		std::cout << "ERROR::LOADSHADERS::COULD_NOT_OPEN_VERTEX_FILE" << std::endl;
 		return false;
 	}
 
 	in_file.close();
 
-	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	shader = glCreateShader(GL_VERTEX_SHADER);
 	const GLchar* vertSrc = src.c_str();
-	glShaderSource(vertexShader, 1, &vertSrc, nullptr);
-	glCompileShader(vertexShader);
+	glShaderSource(shader, 1, &vertSrc, nullptr);
+	glCompileShader(shader);
 
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
 	if (!success)
 	{
-		loadSuccess = false;
-		glGetShaderInfoLog(vertexShader, bufferSize, nullptr, infoLog);
+		glGetShaderInfoLog(shader, bufferSize, nullptr, infoLog);
 		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED" << std::endl;
 		std::cout << infoLog << std::endl;
+		return false;
 	}
 
-	temp = "";
-	src = "";
+	return true;
+}
 
-	in_file.open("fragment_core.glsl");
-
-	if (in_file.is_open())
+bool loadShaders(GLuint &program)
+{
+	GLuint vertexShader, fragmentShader;
+	if (!loadShader(vertexShader, "vertex_core.glsl"))
 	{
-		while (std::getline(in_file, temp))
-		{
-			src += temp + "\n";
-		}
+		return false;
 	}
-	else
+	if (!loadShader(fragmentShader, "fragment_core.glsl"))
 	{
-		loadSuccess = false;
-		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED" << std::endl;
-	}
-
-	in_file.close();
-
-	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	const GLchar* fragSrc = src.c_str();
-	glShaderSource(fragmentShader, 1, &fragSrc, nullptr);
-	glCompileShader(fragmentShader);
-
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		loadSuccess = false;
-		glGetShaderInfoLog(fragmentShader, bufferSize, nullptr, infoLog);
-		std::cout << "ERROR::LOADSHADERS::COULD_NOT_COMPILE_FRAGMENT_SHADER" << std::endl;
-		std::cout << infoLog << std::endl;
+		return false;
 	}
 
 	program = glCreateProgram();
 
 	glAttachShader(program, vertexShader);
 	glAttachShader(program, fragmentShader);
-
 	glLinkProgram(program);
 
+	GLint success;
+	char infoLog[bufferSize];
+	
 	glGetProgramiv(program, GL_LINK_STATUS, &success);
 	if (!success)
 	{
-		loadSuccess = false;
 		glGetProgramInfoLog(program, bufferSize, nullptr, infoLog);
-		std::cout << "ERROR::LOADSHADERS::COULD_NOT_LINK_PROGRAM" << std::endl;
+		std::cout << "ERROR::LOAD_SHADERS::COULD_NOT_LINK_PROGRAM" << std::endl;
 		std::cout << infoLog << std::endl;
+		return false;
 	}
 
 	glUseProgram(0);
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
-	return loadSuccess;
+	return true;
 }
 
 void loadTexture(GLuint& texture, const char* path)
@@ -211,6 +193,7 @@ int main()
 	{
 		glfwTerminate();
 	}
+	std::cout << "load succeed" << std::endl;
 
 	GLuint VAO;
 	glCreateVertexArrays(1, &VAO);
