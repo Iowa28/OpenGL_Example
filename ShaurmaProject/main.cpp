@@ -33,7 +33,7 @@ void processInput(GLFWwindow *window)
 	}
 }
 
-bool loadShader(GLuint& shader, const char* filename)
+bool loadShader(GLuint& shader, const char* filename, const bool isVertexShader)
 {
 	char infoLog[bufferSize];
 	GLint success;
@@ -60,7 +60,7 @@ bool loadShader(GLuint& shader, const char* filename)
 
 	in_file.close();
 
-	shader = glCreateShader(GL_VERTEX_SHADER);
+	shader = glCreateShader(isVertexShader ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER);
 	const GLchar* vertSrc = src.c_str();
 	glShaderSource(shader, 1, &vertSrc, nullptr);
 	glCompileShader(shader);
@@ -80,11 +80,11 @@ bool loadShader(GLuint& shader, const char* filename)
 bool loadShaders(GLuint &program)
 {
 	GLuint vertexShader, fragmentShader;
-	if (!loadShader(vertexShader, "vertex_core.glsl"))
+	if (!loadShader(vertexShader, "vertex_core.glsl", true))
 	{
 		return false;
 	}
-	if (!loadShader(fragmentShader, "fragment_core.glsl"))
+	if (!loadShader(fragmentShader, "fragment_core.glsl", false))
 	{
 		return false;
 	}
@@ -193,7 +193,7 @@ int main()
 	{
 		glfwTerminate();
 	}
-	std::cout << "load succeed" << std::endl;
+	// std::cout << "load succeed" << std::endl;
 
 	GLuint VAO;
 	glCreateVertexArrays(1, &VAO);
@@ -225,6 +225,19 @@ int main()
 	loadTexture(texture1, "Textures/spongebob.png");
 	loadTexture(texture2, "Textures/wall.jpg");
 
+	mat4 ModelMatrix = mat4(1.f);
+	ModelMatrix = translate(ModelMatrix, vec3(0.f, 0.f, 0.f));
+	ModelMatrix = rotate(ModelMatrix, radians(0.f), vec3(1.f, 0.f, 0.f));
+	ModelMatrix = rotate(ModelMatrix, radians(0.f), vec3(0.f, 1.f, 0.f));
+	ModelMatrix = rotate(ModelMatrix, radians(0.f), vec3(0.f, 0.f, 1.f));
+	ModelMatrix = scale(ModelMatrix, vec3(1.f));
+
+	glUseProgram(coreProgram);
+
+	glUniformMatrix4fv(glGetUniformLocation(coreProgram, "ModelMatrix"), 1, GL_FALSE, value_ptr(ModelMatrix));
+	
+	glUseProgram(0);
+
 	while (!glfwWindowShouldClose(window))
 	{
 		processInput(window);
@@ -236,7 +249,20 @@ int main()
 
 		glUniform1i(glGetUniformLocation(coreProgram, "texture1"), 0);
 		glUniform1i(glGetUniformLocation(coreProgram, "texture2"), 1);
+
+		ModelMatrix = translate(ModelMatrix, vec3(0.f, 0.f, 0.f));
+		ModelMatrix = rotate(ModelMatrix, radians(0.f), vec3(1.f, 0.f, 0.f));
+		ModelMatrix = rotate(ModelMatrix, radians(0.f), vec3(0.f, 1.f, 0.f));
+		ModelMatrix = rotate(ModelMatrix, radians(0.1f), vec3(0.f, 0.f, 1.f));
+		ModelMatrix = scale(ModelMatrix, vec3(1.f));
 		
+		glUniformMatrix4fv(glGetUniformLocation(coreProgram, "ModelMatrix"), 1, GL_FALSE, value_ptr(ModelMatrix));
+
+		// glActiveTexture(GL_TEXTURE0);
+		// glBindTexture(GL_TEXTURE_2D, texture1);
+		// glActiveTexture(GL_TEXTURE1);
+		// glBindTexture(GL_TEXTURE_2D, texture2);
+
 		glBindTextureUnit(0, texture1);
 		glBindTextureUnit(1, texture2);
 		
