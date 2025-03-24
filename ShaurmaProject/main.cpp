@@ -150,8 +150,8 @@ int main()
 
 	constexpr int WINDOW_WIDTH = 640;
 	constexpr int WINDOW_HEIGHT = 480;
-	// int framebufferWidth = 0;
-	// int framebufferHeight = 0;
+	int framebufferWidth = 0;
+	int framebufferHeight = 0;
 
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -160,8 +160,8 @@ int main()
 
 	GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "SHAURMA", nullptr, nullptr);
 
+	glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	// glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
 	// glViewport(0, 0, framebufferWidth, framebufferHeight);
 
 	glfwMakeContextCurrent(window);
@@ -221,6 +221,8 @@ int main()
 	glBindVertexArray(0);
 #pragma endregion ConfigureShaders
 
+#pragma region InitMatrices
+	
 	GLuint texture1, texture2;
 	loadTexture(texture1, "Textures/spongebob.png");
 	loadTexture(texture2, "Textures/wall.jpg");
@@ -232,11 +234,27 @@ int main()
 	ModelMatrix = rotate(ModelMatrix, radians(0.f), vec3(0.f, 0.f, 1.f));
 	ModelMatrix = scale(ModelMatrix, vec3(1.f));
 
+	vec3 camPosition = vec3(0.f, 0.f, 1.f);
+	vec3 worldUp = vec3(0.f, 1.f, 0.f);
+	vec3 camFront = vec3(0.f, 0.f, -1.f);
+	mat4 ViewMatrix = mat4(1.f);
+	ViewMatrix = lookAt(camPosition, camPosition + camFront, worldUp);
+
+	float fov = 90.f;
+	float nearPlane = .1f;
+	float farPlane = 1000.f;
+	mat4 ProjectionMatrix = mat4(1.f);
+	ProjectionMatrix = perspective(radians(fov), static_cast<float>(framebufferWidth)/ framebufferHeight, nearPlane, farPlane);
+
 	glUseProgram(coreProgram);
 
 	glUniformMatrix4fv(glGetUniformLocation(coreProgram, "ModelMatrix"), 1, GL_FALSE, value_ptr(ModelMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(coreProgram, "ViewMatrix"), 1, GL_FALSE, value_ptr(ViewMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(coreProgram, "ProjectionMatrix"), 1, GL_FALSE, value_ptr(ProjectionMatrix));
 	
 	glUseProgram(0);
+
+#pragma endregion InitMatrices
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -252,11 +270,16 @@ int main()
 
 		ModelMatrix = translate(ModelMatrix, vec3(0.f, 0.f, 0.f));
 		ModelMatrix = rotate(ModelMatrix, radians(0.f), vec3(1.f, 0.f, 0.f));
-		ModelMatrix = rotate(ModelMatrix, radians(0.f), vec3(0.f, 1.f, 0.f));
-		ModelMatrix = rotate(ModelMatrix, radians(0.1f), vec3(0.f, 0.f, 1.f));
+		ModelMatrix = rotate(ModelMatrix, radians(0.1f), vec3(0.f, 1.f, 0.f));
+		ModelMatrix = rotate(ModelMatrix, radians(0.f), vec3(0.f, 0.f, 1.f));
 		ModelMatrix = scale(ModelMatrix, vec3(1.f));
 		
 		glUniformMatrix4fv(glGetUniformLocation(coreProgram, "ModelMatrix"), 1, GL_FALSE, value_ptr(ModelMatrix));
+		//glUniformMatrix4fv(glGetUniformLocation(coreProgram, "ViewMatrix"), 1, GL_FALSE, value_ptr(ViewMatrix));
+
+		glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
+		ProjectionMatrix = perspective(radians(fov), static_cast<float>(framebufferWidth)/ framebufferHeight, nearPlane, farPlane);
+		glUniformMatrix4fv(glGetUniformLocation(coreProgram, "ProjectionMatrix"), 1, GL_FALSE, value_ptr(ProjectionMatrix));
 
 		// glActiveTexture(GL_TEXTURE0);
 		// glBindTexture(GL_TEXTURE_2D, texture1);
