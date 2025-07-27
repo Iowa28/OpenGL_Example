@@ -25,7 +25,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow *window)
+void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
@@ -137,10 +137,37 @@ void loadTexture(GLuint& texture, const char* path)
 	{
 		std::cout << "ERROR::TEXTURE::LOADING_FAILED" << std::endl;	
 	}
-
 	
 	glBindTexture(GL_TEXTURE_2D, 0);
 	SOIL_free_image_data(image);
+}
+
+void updateInput(GLFWwindow* window, vec3& position, vec3& rotation, vec3& scale)
+{
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	{
+		position.z -= .01f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	{
+		position.z += .01f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		position.x -= .01f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	{
+		position.x += .01f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+	{
+		rotation.y -= 1.f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+	{
+		rotation.y += 1.f;
+	}
 }
 
 int main()
@@ -227,16 +254,21 @@ int main()
 	loadTexture(texture1, "Textures/spongebob.png");
 	loadTexture(texture2, "Textures/wall.jpg");
 
+	vec3 position(0.f);
+	vec3 rotation(0.f);
+	vec3 scale(1.f);
+
 	mat4 ModelMatrix = mat4(1.f);
-	ModelMatrix = translate(ModelMatrix, vec3(0.f, 0.f, 0.f));
-	ModelMatrix = rotate(ModelMatrix, radians(0.f), vec3(1.f, 0.f, 0.f));
-	ModelMatrix = rotate(ModelMatrix, radians(0.f), vec3(0.f, 1.f, 0.f));
-	ModelMatrix = rotate(ModelMatrix, radians(0.f), vec3(0.f, 0.f, 1.f));
-	ModelMatrix = scale(ModelMatrix, vec3(1.f));
+	ModelMatrix = translate(ModelMatrix, position);
+	ModelMatrix = rotate(ModelMatrix, radians(rotation.x), vec3(1.f, 0.f, 0.f));
+	ModelMatrix = rotate(ModelMatrix, radians(rotation.y), vec3(0.f, 1.f, 0.f));
+	ModelMatrix = rotate(ModelMatrix, radians(rotation.z), vec3(0.f, 0.f, 1.f));
+	ModelMatrix = glm::scale(ModelMatrix, scale);
 
 	vec3 camPosition = vec3(0.f, 0.f, 1.f);
 	vec3 worldUp = vec3(0.f, 1.f, 0.f);
 	vec3 camFront = vec3(0.f, 0.f, -1.f);
+	
 	mat4 ViewMatrix = mat4(1.f);
 	ViewMatrix = lookAt(camPosition, camPosition + camFront, worldUp);
 
@@ -259,6 +291,7 @@ int main()
 	while (!glfwWindowShouldClose(window))
 	{
 		processInput(window);
+		updateInput(window, position, rotation, scale);
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -268,11 +301,15 @@ int main()
 		glUniform1i(glGetUniformLocation(coreProgram, "texture1"), 0);
 		glUniform1i(glGetUniformLocation(coreProgram, "texture2"), 1);
 
-		ModelMatrix = translate(ModelMatrix, vec3(0.f, 0.f, 0.f));
-		ModelMatrix = rotate(ModelMatrix, radians(0.f), vec3(1.f, 0.f, 0.f));
-		ModelMatrix = rotate(ModelMatrix, radians(0.1f), vec3(0.f, 1.f, 0.f));
-		ModelMatrix = rotate(ModelMatrix, radians(0.f), vec3(0.f, 0.f, 1.f));
-		ModelMatrix = scale(ModelMatrix, vec3(1.f));
+		// position.z -= .1f;
+		// rotation.y += .1f;
+
+		ModelMatrix = mat4(1.f);
+		ModelMatrix = translate(ModelMatrix, position);
+		ModelMatrix = rotate(ModelMatrix, radians(rotation.x), vec3(1.f, 0.f, 0.f));
+		ModelMatrix = rotate(ModelMatrix, radians(rotation.y), vec3(0.f, 1.f, 0.f));
+		ModelMatrix = rotate(ModelMatrix, radians(rotation.z), vec3(0.f, 0.f, 1.f));
+		ModelMatrix = glm::scale(ModelMatrix, scale);
 		
 		glUniformMatrix4fv(glGetUniformLocation(coreProgram, "ModelMatrix"), 1, GL_FALSE, value_ptr(ModelMatrix));
 		//glUniformMatrix4fv(glGetUniformLocation(coreProgram, "ViewMatrix"), 1, GL_FALSE, value_ptr(ViewMatrix));
@@ -281,16 +318,10 @@ int main()
 		ProjectionMatrix = perspective(radians(fov), static_cast<float>(framebufferWidth)/ framebufferHeight, nearPlane, farPlane);
 		glUniformMatrix4fv(glGetUniformLocation(coreProgram, "ProjectionMatrix"), 1, GL_FALSE, value_ptr(ProjectionMatrix));
 
-		// glActiveTexture(GL_TEXTURE0);
-		// glBindTexture(GL_TEXTURE_2D, texture1);
-		// glActiveTexture(GL_TEXTURE1);
-		// glBindTexture(GL_TEXTURE_2D, texture2);
-
 		glBindTextureUnit(0, texture1);
 		glBindTextureUnit(1, texture2);
 		
 		glBindVertexArray(VAO);
-		// glDrawArrays(GL_TRIANGLES, 0, nrOfVertices);
 		glDrawElements(GL_TRIANGLES, nrOfIndices, GL_UNSIGNED_INT, 0);
 
 		glfwPollEvents();
