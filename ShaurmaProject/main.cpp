@@ -1,11 +1,19 @@
 #include "libs.h"
 
+// Vertex vertices[] =
+// {
+// 	{vec3(-.5f, .5f, 0.f), vec3(1.f, 0.f, 0.f), vec2(0.f, 1.f)},
+// 	{vec3(-.5f, -.5f, 0.f), vec3(0.f, 1.f, 0.f), vec2(0.f, 0.f)},
+// 	{vec3(0.5f, -.5f, 0.f), vec3(0.f, 0.f, 1.f), vec2(1.f, 0.f)},
+// 	{vec3(.5f, .5f, 0.f), vec3(1.f, 1.f, 0.f), vec2(1.f, 1.f)}
+// };
+
 Vertex vertices[] =
 {
-	{vec3(-.5f, .5f, 0.f), vec3(1.f, 0.f, 0.f), vec2(0.f, 1.f)},
-	{vec3(-.5f, -.5f, 0.f), vec3(0.f, 1.f, 0.f), vec2(0.f, 0.f)},
-	{vec3(0.5f, -.5f, 0.f), vec3(0.f, 0.f, 1.f), vec2(1.f, 0.f)},
-	{vec3(.5f, .5f, 0.f), vec3(1.f, 1.f, 0.f), vec2(1.f, 1.f)}
+	{vec3(-.5f, .5f, 0.f), vec3(1.f, 0.f, 0.f), vec2(0.f, 1.f), vec3(0.f, 0.f, -1.f)}, 
+	{vec3(-.5f, -.5f, 0.f), vec3(0.f, 1.f, 0.f), vec2(0.f, 0.f), vec3(0.f, 0.f, -1.f)},
+	{vec3(0.5f, -.5f, 0.f), vec3(0.f, 0.f, 1.f), vec2(1.f, 0.f), vec3(0.f, 0.f, -1.f)},
+	{vec3(.5f, .5f, 0.f), vec3(1.f, 1.f, 0.f), vec2(1.f, 1.f), vec3(0.f, 0.f, -1.f)}
 };
 
 signed nrOfVertices = sizeof(vertices) / sizeof(Vertex);
@@ -144,29 +152,30 @@ void loadTexture(GLuint& texture, const char* path)
 
 void updateInput(GLFWwindow* window, vec3& position, vec3& rotation, vec3& scale)
 {
+	constexpr float speed = .001f;
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
-		position.z -= .01f;
+		position.z -= speed;
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
-		position.z += .01f;
+		position.z += speed;
 	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 	{
-		position.x -= .01f;
+		position.x -= speed;
 	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
-		position.x += .01f;
+		position.x += speed;
 	}
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 	{
-		rotation.y -= 1.f;
+		rotation.y -= .1f;
 	}
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 	{
-		rotation.y += 1.f;
+		rotation.y += .1f;
 	}
 }
 
@@ -245,18 +254,21 @@ int main()
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*) offsetof(Vertex, texcoord));
 	glEnableVertexAttribArray(2);
 
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*) offsetof(Vertex, normal));
+	glEnableVertexAttribArray(3);
+
 	glBindVertexArray(0);
 #pragma endregion ConfigureShaders
 
 #pragma region InitMatrices
 	
 	GLuint texture1, texture2;
-	loadTexture(texture1, "Textures/spongebob.png");
+	loadTexture(texture1, "Textures/pusheen.png");
 	loadTexture(texture2, "Textures/wall.jpg");
 
-	vec3 position(0.f);
-	vec3 rotation(0.f);
-	vec3 scale(1.f);
+	vec3 position = vec3(0.f);
+	vec3 rotation = vec3(0.f);
+	vec3 scale = vec3(1.f);
 
 	mat4 ModelMatrix = mat4(1.f);
 	ModelMatrix = translate(ModelMatrix, position);
@@ -278,11 +290,16 @@ int main()
 	mat4 ProjectionMatrix = mat4(1.f);
 	ProjectionMatrix = perspective(radians(fov), static_cast<float>(framebufferWidth)/ framebufferHeight, nearPlane, farPlane);
 
+	vec3 lightPos0 = vec3(0.f, 0.f, 1.f);
+
 	glUseProgram(coreProgram);
 
 	glUniformMatrix4fv(glGetUniformLocation(coreProgram, "ModelMatrix"), 1, GL_FALSE, value_ptr(ModelMatrix));
 	glUniformMatrix4fv(glGetUniformLocation(coreProgram, "ViewMatrix"), 1, GL_FALSE, value_ptr(ViewMatrix));
 	glUniformMatrix4fv(glGetUniformLocation(coreProgram, "ProjectionMatrix"), 1, GL_FALSE, value_ptr(ProjectionMatrix));
+
+	glUniform3fv(glGetUniformLocation(coreProgram, "lightPos0"), 1, value_ptr(lightPos0));
+	glUniform3fv(glGetUniformLocation(coreProgram, "cameraPos"), 1, value_ptr(camPosition));
 	
 	glUseProgram(0);
 

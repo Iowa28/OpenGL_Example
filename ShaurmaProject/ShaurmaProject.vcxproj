@@ -143,6 +143,7 @@
     <None Include="vertex_core.glsl" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Textures\pusheen.png" />
     <Content Include="Textures\spongebob.png" />
     <Content Include="Textures\wall.jpg" />
   </ItemGroup>
