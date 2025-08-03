@@ -18,6 +18,8 @@
 
 #include <SOIL2.h>
 
+#include "Classes/Shader.h"
+
 using namespace glm;
 
 struct Vertex

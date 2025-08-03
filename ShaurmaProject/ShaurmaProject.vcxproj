@@ -136,11 +136,12 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Classes\Shader.h" />
     <ClInclude Include="libs.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="fragment_core.glsl" />
-    <None Include="vertex_core.glsl" />
+    <None Include="Shaders\fragment_core.glsl" />
+    <None Include="Shaders\vertex_core.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Textures\pusheen.png" />
