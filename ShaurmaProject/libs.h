@@ -19,6 +19,7 @@
 #include <SOIL2.h>
 
 #include "Classes/Shader.h"
+#include "Classes/Texture.h"
 
 using namespace glm;
 

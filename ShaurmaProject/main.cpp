@@ -41,117 +41,6 @@ void processInput(GLFWwindow* window)
 	}
 }
 
-/*
-bool loadShader(GLuint& shader, const char* filename, const bool isVertexShader)
-{
-	char infoLog[bufferSize];
-	GLint success;
-
-	std::string temp;
-	std::string src;
-
-	std::ifstream in_file;
-
-	in_file.open(filename);
-
-	if (in_file.is_open())
-	{
-		while (std::getline(in_file, temp))
-		{
-			src += temp + "\n";
-		}
-	}
-	else
-	{
-		std::cout << "ERROR::LOADSHADERS::COULD_NOT_OPEN_VERTEX_FILE" << std::endl;
-		return false;
-	}
-
-	in_file.close();
-
-	shader = glCreateShader(isVertexShader ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER);
-	const GLchar* vertSrc = src.c_str();
-	glShaderSource(shader, 1, &vertSrc, nullptr);
-	glCompileShader(shader);
-
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(shader, bufferSize, nullptr, infoLog);
-		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED" << std::endl;
-		std::cout << infoLog << std::endl;
-		return false;
-	}
-
-	return true;
-}
-
-bool loadShaders(GLuint &program)
-{
-	GLuint vertexShader, fragmentShader;
-	if (!loadShader(vertexShader, "Shaders/vertex_core.glsl", true))
-	{
-		return false;
-	}
-	if (!loadShader(fragmentShader, "Shaders/fragment_core.glsl", false))
-	{
-		return false;
-	}
-
-	program = glCreateProgram();
-
-	glAttachShader(program, vertexShader);
-	glAttachShader(program, fragmentShader);
-	glLinkProgram(program);
-
-	GLint success;
-	char infoLog[bufferSize];
-	
-	glGetProgramiv(program, GL_LINK_STATUS, &success);
-	if (!success)
-	{
-		glGetProgramInfoLog(program, bufferSize, nullptr, infoLog);
-		std::cout << "ERROR::LOAD_SHADERS::COULD_NOT_LINK_PROGRAM" << std::endl;
-		std::cout << infoLog << std::endl;
-		return false;
-	}
-
-	glUseProgram(0);
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-
-	return true;
-}
-*/
-
-void loadTexture(GLuint& texture, const char* path)
-{
-	int image_width = 0;
-	int image_height = 0;
-	unsigned char* image = SOIL_load_image(path, &image_width, &image_height, nullptr, SOIL_LOAD_RGBA);
-	
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-	if (image)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cout << "ERROR::TEXTURE::LOADING_FAILED" << std::endl;	
-	}
-	
-	glBindTexture(GL_TEXTURE_2D, 0);
-	SOIL_free_image_data(image);
-}
-
 void updateInput(GLFWwindow* window, vec3& position, vec3& rotation, vec3& scale)
 {
 	constexpr float speed = .001f;
@@ -225,16 +114,9 @@ int main()
 	
 #pragma endregion RenderSettings
 
+#pragma region ConfigureShaders
 	Shader shader = Shader("Shaders/vertex_core.glsl", "Shaders/fragment_core.glsl");
 	
-	// GLuint coreProgram;
-	// if (!loadShaders(coreProgram))
-	// {
-	// 	glfwTerminate();
-	// }
-	// std::cout << "load succeed" << std::endl;
-
-#pragma region ConfigureShaders
 	GLuint VAO;
 	glCreateVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
@@ -265,10 +147,8 @@ int main()
 #pragma endregion ConfigureShaders
 
 #pragma region InitMatrices
-	
-	GLuint texture1, texture2;
-	loadTexture(texture1, "Textures/pusheen.png");
-	loadTexture(texture2, "Textures/wall.jpg");
+	Texture texture1 = Texture("Textures/pusheen.png", GL_TEXTURE_2D, 0);
+	Texture texture2 = Texture("Textures/wall.jpg", GL_TEXTURE_2D, 1);
 
 	vec3 position = vec3(0.f);
 	vec3 rotation = vec3(0.f);
@@ -301,19 +181,10 @@ int main()
 	shader.setMat4fv(ModelMatrix, "ModelMatrix");
 	shader.setMat4fv(ViewMatrix, "ViewMatrix");
 	shader.setMat4fv(ProjectionMatrix, "ProjectionMatrix");
-
-	// glUseProgram(coreProgram);
-	
-	// glUniformMatrix4fv(glGetUniformLocation(coreProgram, "ModelMatrix"), 1, GL_FALSE, value_ptr(ModelMatrix));
-	// glUniformMatrix4fv(glGetUniformLocation(coreProgram, "ViewMatrix"), 1, GL_FALSE, value_ptr(ViewMatrix));
-	// glUniformMatrix4fv(glGetUniformLocation(coreProgram, "ProjectionMatrix"), 1, GL_FALSE, value_ptr(ProjectionMatrix));
-	// glUniform3fv(glGetUniformLocation(coreProgram, "lightPos0"), 1, value_ptr(lightPos0));
-	// glUniform3fv(glGetUniformLocation(coreProgram, "cameraPos"), 1, value_ptr(camPosition));
 	
 	shader.setVec3f(lightPos0, "lightPos0");
 	shader.setVec3f(camPosition, "cameraPos");
 	
-	// glUseProgram(0);
 	shader.unuse();
 
 #pragma endregion InitMatrices
@@ -326,13 +197,10 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-		// glUseProgram(coreProgram);
 		shader.use();
 
-		// glUniform1i(glGetUniformLocation(coreProgram, "texture1"), 0);
-		// glUniform1i(glGetUniformLocation(coreProgram, "texture2"), 1);
-		shader.set1i(0, "texture1");
-		shader.set1i(1, "texture2");
+		shader.set1i(texture1.getTextureUnit(), "texture1");
+		shader.set1i(texture2.getTextureUnit(), "texture2");
 
 		ModelMatrix = mat4(1.f);
 		ModelMatrix = translate(ModelMatrix, position);
@@ -341,16 +209,15 @@ int main()
 		ModelMatrix = rotate(ModelMatrix, radians(rotation.z), vec3(0.f, 0.f, 1.f));
 		ModelMatrix = glm::scale(ModelMatrix, scale);
 		
-		// glUniformMatrix4fv(glGetUniformLocation(coreProgram, "ModelMatrix"), 1, GL_FALSE, value_ptr(ModelMatrix));
 		shader.setMat4fv(ModelMatrix, "ModelMatrix");
 
 		glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
 		ProjectionMatrix = perspective(radians(fov), static_cast<float>(framebufferWidth)/ framebufferHeight, nearPlane, farPlane);
-		// glUniformMatrix4fv(glGetUniformLocation(coreProgram, "ProjectionMatrix"), 1, GL_FALSE, value_ptr(ProjectionMatrix));
+
 		shader.setMat4fv(ProjectionMatrix, "ProjectionMatrix");
 
-		glBindTextureUnit(0, texture1);
-		glBindTextureUnit(1, texture2);
+		texture1.bind();
+		texture2.bind();
 		
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, nrOfIndices, GL_UNSIGNED_INT, 0);
@@ -359,14 +226,12 @@ int main()
 		glfwSwapBuffers(window);
 
 		glBindVertexArray(0);
-		// glUseProgram(0);
+
 		shader.unuse();
 	}
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
-
-	// glDeleteProgram(coreProgram);
 
 	return 0;
 }
