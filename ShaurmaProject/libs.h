@@ -20,6 +20,7 @@
 
 #include "Classes/Shader.h"
 #include "Classes/Texture.h"
+#include "Classes/Material.h"
 
 using namespace glm;
 

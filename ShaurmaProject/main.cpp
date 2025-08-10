@@ -115,7 +115,7 @@ int main()
 #pragma endregion RenderSettings
 
 #pragma region ConfigureShaders
-	Shader shader = Shader("Shaders/vertex_core.glsl", "Shaders/fragment_core.glsl");
+	Shader coreProgram = Shader("Shaders/vertex_core.glsl", "Shaders/fragment_core.glsl");
 	
 	GLuint VAO;
 	glCreateVertexArrays(1, &VAO);
@@ -150,6 +150,14 @@ int main()
 	Texture texture1 = Texture("Textures/pusheen.png", GL_TEXTURE_2D, 0);
 	Texture texture2 = Texture("Textures/wall.jpg", GL_TEXTURE_2D, 1);
 
+	Material material = Material(
+		vec3(1.f),
+		vec3(1.f),
+		vec3(1.f),
+		texture1.getTextureUnit(),
+		texture2.getTextureUnit()
+	);
+
 	vec3 position = vec3(0.f);
 	vec3 rotation = vec3(0.f);
 	vec3 scale = vec3(1.f);
@@ -176,16 +184,16 @@ int main()
 
 	vec3 lightPos0 = vec3(0.f, 0.f, 1.f);
 
-	shader.use();
+	coreProgram.use();
 	
-	shader.setMat4fv(ModelMatrix, "ModelMatrix");
-	shader.setMat4fv(ViewMatrix, "ViewMatrix");
-	shader.setMat4fv(ProjectionMatrix, "ProjectionMatrix");
+	coreProgram.setMat4fv(ModelMatrix, "ModelMatrix");
+	coreProgram.setMat4fv(ViewMatrix, "ViewMatrix");
+	coreProgram.setMat4fv(ProjectionMatrix, "ProjectionMatrix");
 	
-	shader.setVec3f(lightPos0, "lightPos0");
-	shader.setVec3f(camPosition, "cameraPos");
+	coreProgram.setVec3f(lightPos0, "lightPos0");
+	coreProgram.setVec3f(camPosition, "cameraPos");
 	
-	shader.unuse();
+	coreProgram.unuse();
 
 #pragma endregion InitMatrices
 
@@ -197,10 +205,9 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-		shader.use();
+		coreProgram.use();
 
-		shader.set1i(texture1.getTextureUnit(), "texture1");
-		shader.set1i(texture2.getTextureUnit(), "texture2");
+		material.sendToShader(coreProgram);
 
 		ModelMatrix = mat4(1.f);
 		ModelMatrix = translate(ModelMatrix, position);
@@ -209,12 +216,12 @@ int main()
 		ModelMatrix = rotate(ModelMatrix, radians(rotation.z), vec3(0.f, 0.f, 1.f));
 		ModelMatrix = glm::scale(ModelMatrix, scale);
 		
-		shader.setMat4fv(ModelMatrix, "ModelMatrix");
+		coreProgram.setMat4fv(ModelMatrix, "ModelMatrix");
 
 		glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
 		ProjectionMatrix = perspective(radians(fov), static_cast<float>(framebufferWidth)/ framebufferHeight, nearPlane, farPlane);
 
-		shader.setMat4fv(ProjectionMatrix, "ProjectionMatrix");
+		coreProgram.setMat4fv(ProjectionMatrix, "ProjectionMatrix");
 
 		texture1.bind();
 		texture2.bind();
@@ -227,7 +234,7 @@ int main()
 
 		glBindVertexArray(0);
 
-		shader.unuse();
+		coreProgram.unuse();
 	}
 
 	glfwDestroyWindow(window);
