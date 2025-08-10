@@ -24,4 +24,5 @@ using namespace glm;
 #include "Classes/Shader.h"
 #include "Classes/Texture.h"
 #include "Classes/Material.h"
+#include "Classes/Primitive.h"
 #include "Classes/Mesh.h"

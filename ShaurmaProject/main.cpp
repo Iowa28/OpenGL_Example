@@ -1,31 +1,5 @@
 #include "libs.h"
 
-// Vertex vertices[] =
-// {
-// 	{vec3(-.5f, .5f, 0.f), vec3(1.f, 0.f, 0.f), vec2(0.f, 1.f)},
-// 	{vec3(-.5f, -.5f, 0.f), vec3(0.f, 1.f, 0.f), vec2(0.f, 0.f)},
-// 	{vec3(0.5f, -.5f, 0.f), vec3(0.f, 0.f, 1.f), vec2(1.f, 0.f)},
-// 	{vec3(.5f, .5f, 0.f), vec3(1.f, 1.f, 0.f), vec2(1.f, 1.f)}
-// };
-
-Vertex vertices[] =
-{
-	{vec3(-.5f, .5f, 0.f), vec3(1.f, 0.f, 0.f), vec2(0.f, 1.f), vec3(0.f, 0.f, -1.f)}, 
-	{vec3(-.5f, -.5f, 0.f), vec3(0.f, 1.f, 0.f), vec2(0.f, 0.f), vec3(0.f, 0.f, -1.f)},
-	{vec3(0.5f, -.5f, 0.f), vec3(0.f, 0.f, 1.f), vec2(1.f, 0.f), vec3(0.f, 0.f, -1.f)},
-	{vec3(.5f, .5f, 0.f), vec3(1.f, 1.f, 0.f), vec2(1.f, 1.f), vec3(0.f, 0.f, -1.f)}
-};
-
-signed nrOfVertices = sizeof(vertices) / sizeof(Vertex);
-
-GLuint indices[] =
-{
-	0, 1, 2,
-	0, 2, 3
-};
-
-signed nrOfIndices = sizeof(indices) / sizeof(GLuint);
-
 constexpr uint16_t bufferSize = 512;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -123,10 +97,9 @@ int main()
 #pragma endregion RenderSettings
 	
 	Shader coreProgram = Shader("Shaders/vertex_core.glsl", "Shaders/fragment_core.glsl");
+	Quad quad = Quad();
+	Mesh mesh = Mesh(&quad);
 
-	Mesh mesh = Mesh(vertices, nrOfVertices, indices, nrOfIndices);
-
-#pragma region InitMatrices
 	Texture texture1 = Texture("Textures/pusheen.png", GL_TEXTURE_2D, 0);
 	Texture texture2 = Texture("Textures/wall.jpg", GL_TEXTURE_2D, 1);
 
@@ -142,8 +115,7 @@ int main()
 	vec3 worldUp = vec3(0.f, 1.f, 0.f);
 	vec3 camFront = vec3(0.f, 0.f, -1.f);
 	
-	mat4 ViewMatrix = mat4(1.f);
-	ViewMatrix = lookAt(camPosition, camPosition + camFront, worldUp);
+	mat4 ViewMatrix = lookAt(camPosition, camPosition + camFront, worldUp);
 
 	float fov = 90.f;
 	float nearPlane = .1f;
@@ -162,8 +134,6 @@ int main()
 	coreProgram.setVec3f(camPosition, "cameraPos");
 	
 	coreProgram.unuse();
-
-#pragma endregion InitMatrices
 
 	while (!glfwWindowShouldClose(window))
 	{

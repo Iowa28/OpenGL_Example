@@ -138,6 +138,7 @@
   <ItemGroup>
     <ClInclude Include="Classes\Material.h" />
     <ClInclude Include="Classes\Mesh.h" />
+    <ClInclude Include="Classes\Primitive.h" />
     <ClInclude Include="Classes\Shader.h" />
     <ClInclude Include="Classes\Texture.h" />
     <ClInclude Include="Classes\Vertex.h" />
