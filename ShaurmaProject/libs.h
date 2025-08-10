@@ -18,16 +18,10 @@
 
 #include <SOIL2.h>
 
+using namespace glm;
+
+#include "Classes/Vertex.h"
 #include "Classes/Shader.h"
 #include "Classes/Texture.h"
 #include "Classes/Material.h"
-
-using namespace glm;
-
-struct Vertex
-{
-    vec3 position;
-    vec3 color;
-    vec2 texcoord;
-    vec2 normal;
-};
+#include "Classes/Mesh.h"

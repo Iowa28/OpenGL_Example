@@ -116,6 +116,8 @@ int main()
 
 #pragma region ConfigureShaders
 	Shader coreProgram = Shader("Shaders/vertex_core.glsl", "Shaders/fragment_core.glsl");
+
+	Mesh mesh = Mesh(vertices, nrOfVertices, indices, nrOfVertices);
 	
 	GLuint VAO;
 	glCreateVertexArrays(1, &VAO);
@@ -137,7 +139,7 @@ int main()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*) offsetof(Vertex, color));
 	glEnableVertexAttribArray(1);
 
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*) offsetof(Vertex, texcoord));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*) offsetof(Vertex, texCoord));
 	glEnableVertexAttribArray(2);
 
 	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*) offsetof(Vertex, normal));
@@ -161,7 +163,7 @@ int main()
 	vec3 position = vec3(0.f);
 	vec3 rotation = vec3(0.f);
 	vec3 scale = vec3(1.f);
-
+    
 	mat4 ModelMatrix = mat4(1.f);
 	ModelMatrix = translate(ModelMatrix, position);
 	ModelMatrix = rotate(ModelMatrix, radians(rotation.x), vec3(1.f, 0.f, 0.f));
@@ -228,6 +230,8 @@ int main()
 		
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, nrOfIndices, GL_UNSIGNED_INT, 0);
+
+		mesh.render(&coreProgram);
 
 		glfwPollEvents();
 		glfwSwapBuffers(window);

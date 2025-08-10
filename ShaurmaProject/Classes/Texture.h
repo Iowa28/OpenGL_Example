@@ -1,16 +1,7 @@
 #pragma once
 
-#include <iostream>
-#include <string>
-
-#include <glew.h>
-#include <glfw3.h>
-
-#include<SOIL2.h>
-
 class Texture
 {
-private:
     GLuint id;
     GLuint texture;
     int width;

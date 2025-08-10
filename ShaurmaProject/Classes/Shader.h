@@ -1,24 +1,9 @@
 #pragma once
 
-#include <iostream>
-#include <fstream>
-#include <string>
-
-#include <glew.h>
-#include <glfw3.h>
-
-#include <glm.hpp>
-#include <vec2.hpp>
-#include <vec3.hpp>
-#include <vec4.hpp>
-#include <mat4x4.hpp>
-#include <gtc/type_ptr.hpp>
-
 using namespace std;
 
 class Shader
 {
-private:
     GLuint id;
 
     string loadShaderSource(const char* fileName)
@@ -143,28 +128,28 @@ public:
         glUniform1f(glGetUniformLocation(this->id, name), value);
     }
 
-    void setVec2f(glm::fvec2 value, const GLchar* name)
+    void setVec2f(fvec2 value, const GLchar* name)
     {
-        glUniform2fv(glGetUniformLocation(this->id, name), 1, glm::value_ptr(value));
+        glUniform2fv(glGetUniformLocation(this->id, name), 1, value_ptr(value));
     }
 
-    void setVec3f(glm::fvec3 value, const GLchar* name)
+    void setVec3f(fvec3 value, const GLchar* name)
     {
-        glUniform3fv(glGetUniformLocation(this->id, name), 1, glm::value_ptr(value));
+        glUniform3fv(glGetUniformLocation(this->id, name), 1, value_ptr(value));
     }
 
-    void setVec4f(glm::fvec4 value, const GLchar* name)
+    void setVec4f(fvec4 value, const GLchar* name)
     {
-        glUniform4fv(glGetUniformLocation(this->id, name), 1, glm::value_ptr(value));
+        glUniform4fv(glGetUniformLocation(this->id, name), 1, value_ptr(value));
     }
 
-    void setMat3fv(glm::mat3 value, const GLchar* name, GLboolean transpose = GL_FALSE)
+    void setMat3fv(mat3 value, const GLchar* name, GLboolean transpose = GL_FALSE)
     {
-        glUniformMatrix3fv(glGetUniformLocation(this->id, name), 1, transpose, glm::value_ptr(value));
+        glUniformMatrix3fv(glGetUniformLocation(this->id, name), 1, transpose, value_ptr(value));
     }
 
-    void setMat4fv(glm::mat4 value, const GLchar* name, GLboolean transpose = GL_FALSE)
+    void setMat4fv(mat4 value, const GLchar* name, GLboolean transpose = GL_FALSE)
     {
-        glUniformMatrix4fv(glGetUniformLocation(this->id, name), 1, transpose, glm::value_ptr(value));
+        glUniformMatrix4fv(glGetUniformLocation(this->id, name), 1, transpose, value_ptr(value));
     }
 };
