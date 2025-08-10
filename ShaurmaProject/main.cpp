@@ -41,32 +41,40 @@ void processInput(GLFWwindow* window)
 	}
 }
 
-void updateInput(GLFWwindow* window, vec3& position, vec3& rotation, vec3& scale)
+void updateInput(GLFWwindow* window, Mesh& mesh)
 {
 	constexpr float speed = .001f;
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
-		position.z -= speed;
+		mesh.move(vec3(0.f, 0.f, -speed));
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
-		position.z += speed;
+		mesh.move(vec3(0.f, 0.f, speed));
 	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 	{
-		position.x -= speed;
+		mesh.move(vec3(-speed, 0.f, 0.f));
 	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
-		position.x += speed;
+		mesh.move(vec3(speed, 0.f, 0.f));
 	}
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 	{
-		rotation.y -= .1f;
+		mesh.rotate(vec3(0.f, -0.1f, 0.f));
 	}
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 	{
-		rotation.y += .1f;
+		mesh.rotate(vec3(0.f, 0.1f, 0.f));
+	}
+	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+	{
+		mesh.scaleUp(vec3(1.01f));
+	}
+	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+	{
+		mesh.scaleUp(vec3(0.99f));
 	}
 }
 
@@ -113,40 +121,10 @@ int main()
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	
 #pragma endregion RenderSettings
-
-#pragma region ConfigureShaders
+	
 	Shader coreProgram = Shader("Shaders/vertex_core.glsl", "Shaders/fragment_core.glsl");
 
-	Mesh mesh = Mesh(vertices, nrOfVertices, indices, nrOfVertices);
-	
-	GLuint VAO;
-	glCreateVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	GLuint VBO;
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	
-	GLuint EBO;
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*) offsetof(Vertex, position));
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*) offsetof(Vertex, color));
-	glEnableVertexAttribArray(1);
-
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*) offsetof(Vertex, texCoord));
-	glEnableVertexAttribArray(2);
-
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*) offsetof(Vertex, normal));
-	glEnableVertexAttribArray(3);
-
-	glBindVertexArray(0);
-#pragma endregion ConfigureShaders
+	Mesh mesh = Mesh(vertices, nrOfVertices, indices, nrOfIndices);
 
 #pragma region InitMatrices
 	Texture texture1 = Texture("Textures/pusheen.png", GL_TEXTURE_2D, 0);
@@ -159,17 +137,6 @@ int main()
 		texture1.getTextureUnit(),
 		texture2.getTextureUnit()
 	);
-
-	vec3 position = vec3(0.f);
-	vec3 rotation = vec3(0.f);
-	vec3 scale = vec3(1.f);
-    
-	mat4 ModelMatrix = mat4(1.f);
-	ModelMatrix = translate(ModelMatrix, position);
-	ModelMatrix = rotate(ModelMatrix, radians(rotation.x), vec3(1.f, 0.f, 0.f));
-	ModelMatrix = rotate(ModelMatrix, radians(rotation.y), vec3(0.f, 1.f, 0.f));
-	ModelMatrix = rotate(ModelMatrix, radians(rotation.z), vec3(0.f, 0.f, 1.f));
-	ModelMatrix = glm::scale(ModelMatrix, scale);
 
 	vec3 camPosition = vec3(0.f, 0.f, 1.f);
 	vec3 worldUp = vec3(0.f, 1.f, 0.f);
@@ -188,7 +155,6 @@ int main()
 
 	coreProgram.use();
 	
-	coreProgram.setMat4fv(ModelMatrix, "ModelMatrix");
 	coreProgram.setMat4fv(ViewMatrix, "ViewMatrix");
 	coreProgram.setMat4fv(ProjectionMatrix, "ProjectionMatrix");
 	
@@ -202,7 +168,7 @@ int main()
 	while (!glfwWindowShouldClose(window))
 	{
 		processInput(window);
-		updateInput(window, position, rotation, scale);
+		updateInput(window, mesh);
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -210,15 +176,6 @@ int main()
 		coreProgram.use();
 
 		material.sendToShader(coreProgram);
-
-		ModelMatrix = mat4(1.f);
-		ModelMatrix = translate(ModelMatrix, position);
-		ModelMatrix = rotate(ModelMatrix, radians(rotation.x), vec3(1.f, 0.f, 0.f));
-		ModelMatrix = rotate(ModelMatrix, radians(rotation.y), vec3(0.f, 1.f, 0.f));
-		ModelMatrix = rotate(ModelMatrix, radians(rotation.z), vec3(0.f, 0.f, 1.f));
-		ModelMatrix = glm::scale(ModelMatrix, scale);
-		
-		coreProgram.setMat4fv(ModelMatrix, "ModelMatrix");
 
 		glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
 		ProjectionMatrix = perspective(radians(fov), static_cast<float>(framebufferWidth)/ framebufferHeight, nearPlane, farPlane);
@@ -228,9 +185,6 @@ int main()
 		texture1.bind();
 		texture2.bind();
 		
-		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, nrOfIndices, GL_UNSIGNED_INT, 0);
-
 		mesh.render(&coreProgram);
 
 		glfwPollEvents();
