@@ -5,11 +5,13 @@ using namespace std;
 class Shader
 {
     GLuint id;
+    const int versionMajor;
+    const int versionMinor;
 
     string loadShaderSource(const char* fileName)
     {
-        string temp = "";
-        string src = "";
+        string temp;
+        string src;
         ifstream in_file;
 
         in_file.open(fileName);
@@ -27,6 +29,11 @@ class Shader
         }
 
         in_file.close();
+
+        const string version = to_string(versionMajor) + to_string(versionMinor) + "0";
+        const string replace = src.replace(src.find("#version"), 12, "#version " + version);
+        // cout << replace << endl;
+        
         return src;
     }
 
@@ -38,7 +45,7 @@ class Shader
         const GLuint shader = glCreateShader(type);
         const string str_src = this->loadShaderSource(fileName);
         const GLchar* src = str_src.c_str();
-        glShaderSource(shader, 1, &src, NULL);
+        glShaderSource(shader, 1, &src, nullptr);
         glCompileShader(shader);
 
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
@@ -83,7 +90,8 @@ class Shader
 
 public:
 
-    Shader(const char* vertexFile, const char* fragmentFile, const char* geometryFile = "")
+    Shader(const int versionMajor, const int versionMinor, const char* vertexFile, const char* fragmentFile,
+        const char* geometryFile = ""): versionMajor(versionMajor), versionMinor(versionMinor)
     {
         GLuint geometryShader = 0;
 

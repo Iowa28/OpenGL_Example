@@ -52,6 +52,34 @@ void updateInput(GLFWwindow* window, Mesh& mesh)
 	}
 }
 
+GLFWwindow* createWindow(
+	const char* title,
+	const int width,
+	const int height,
+	int& fbWidth,
+	int& fbHeight,
+	const int GLMajorVer,
+	const int GLMinorVer,
+	const bool resizable
+)
+{
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GLMajorVer);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GLMinorVer);
+	glfwWindowHint(GLFW_RESIZABLE, resizable);
+
+	GLFWwindow* window = glfwCreateWindow(width, height, title, nullptr, nullptr);
+
+	glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	// glViewport(0, 0, framebufferWidth, framebufferHeight);
+
+	glfwMakeContextCurrent(window);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+	return window;
+}
+
 int main()
 {
 #pragma region InitOpenGL
@@ -61,20 +89,19 @@ int main()
 	constexpr int WINDOW_HEIGHT = 480;
 	int framebufferWidth = 0;
 	int framebufferHeight = 0;
+	constexpr int GLMajorVersion = 4;
+	constexpr int GLMinorVersion = 5;
 
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
-	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
-
-	GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "SHAURMA", nullptr, nullptr);
-
-	glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	// glViewport(0, 0, framebufferWidth, framebufferHeight);
-
-	glfwMakeContextCurrent(window);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	GLFWwindow* window = createWindow(
+		"Shaurma",
+		WINDOW_WIDTH,
+		WINDOW_HEIGHT,
+		framebufferWidth,
+		framebufferHeight,
+		GLMajorVersion,
+		GLMinorVersion,
+		false
+	);
 
 	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK)
@@ -96,7 +123,7 @@ int main()
 	
 #pragma endregion RenderSettings
 	
-	Shader coreProgram = Shader("Shaders/vertex_core.glsl", "Shaders/fragment_core.glsl");
+	Shader coreProgram = Shader(GLMajorVersion, GLMinorVersion, "Shaders/vertex_core.glsl", "Shaders/fragment_core.glsl");
 	Quad quad = Quad();
 	Mesh mesh = Mesh(&quad);
 
